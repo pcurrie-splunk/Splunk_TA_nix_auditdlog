@@ -51,3 +51,20 @@ type=ADD_GROUP msg=audit(11/18/2022 14:33:22.286:2759) : pid=196692 uid=root aui
 Sysmon for linux/Splunk
 
 Nov 18 14:33:22 hellosplunk-VirtualBox sysmon: <Event><System><Provider Name="Linux-Sysmon" Guid="{ff032593-a8d3-4f13-b0d6-01fc615a0f97}"/><EventID>1</EventID><Version>5</Version><Level>4</Level><Task>1</Task><Opcode>0</Opcode><Keywords>0x8000000000000000</Keywords><TimeCreated SystemTime="2022-11-18T14:33:22.281954000Z"/><EventRecordID>421210</EventRecordID><Correlation/><Execution ProcessID="21004" ThreadID="21004"/><Channel>Linux-Sysmon/Operational</Channel><Computer>hellosplunk-VirtualBox</Computer><Security UserId="0"/></System><EventData><Data Name="RuleName">-</Data><Data Name="UtcTime">2022-11-13 19:44:06.867</Data><Data Name="ProcessGuid">{8ef76b8e-4906-6371-35c5-783f95550000}</Data><Data Name="ProcessId">196692</Data><Data Name="Image">/usr/sbin/useradd</Data><Data Name="FileVersion">-</Data><Data Name="Description">-</Data><Data Name="Product">-</Data><Data Name="Company">-</Data><Data Name="OriginalFileName">-</Data><Data Name="CommandLine">useradd test-auditd-user</Data><Data Name="CurrentDirectory">/var/tmp</Data><Data Name="User">root</Data><Data Name="LogonGuid">{8ef76b8e-0000-0000-0000-000001000000}</Data><Data Name="LogonId">0</Data><Data Name="TerminalSessionId">131</Data><Data Name="IntegrityLevel">no level</Data><Data Name="Hashes">-</Data><Data Name="ParentProcessGuid">{8ef76b8e-3dbe-6371-d586-209f9c550000}</Data><Data Name="ParentProcessId">194645</Data><Data Name="ParentImage">/usr/bin/bash</Data><Data Name="ParentCommandLine">-bash</Data><Data Name="ParentUser">root</Data></EventData></Event>
+
+
+7. The linux TA says do enriched logs instead of RAW, lets see if there is any difference - doesbnt seem to be much different
+
+type=SYSCALL msg=audit(11/21/2022 10:29:54.556:3009) : arch=x86_64 syscall=sendto success=yes exit=132 a0=0x3 a1=0x7ffcda14f9a0 a2=0x84 a3=0x0 items=0 ppid=209047 pid=209213 auid=hello-splunk uid=root gid=root euid=root suid=root fsuid=root egid=root sgid=root fsgid=root tty=pts1 ses=144 comm=useradd exe=/usr/sbin/useradd subj=? key=(null) 
+type=PROCTITLE msg=audit(11/21/2022 10:29:54.556:3009) : proctitle=useradd test-enrich-log 
+type=ADD_USER msg=audit(11/21/2022 10:29:54.556:3009) : pid=209213 uid=root auid=hello-splunk ses=144 subj=? msg='op=adding user id=unknown(1007) exe=/usr/sbin/useradd hostname=hellosplunk-VirtualBox addr=? terminal=pts/1 res=success' 
+
+type=SYSCALL msg=audit(11/21/2022 10:29:54.544:3008) : arch=x86_64 syscall=sendto success=yes exit=148 a0=0x3 a1=0x7ffcda14fb80 a2=0x94 a3=0x0 items=0 ppid=209047 pid=209213 auid=hello-splunk uid=root gid=root euid=root suid=root fsuid=root egid=root sgid=root fsgid=root tty=pts1 ses=144 comm=useradd exe=/usr/sbin/useradd subj=? key=(null) 
+type=PROCTITLE msg=audit(11/21/2022 10:29:54.544:3008) : proctitle=useradd test-enrich-log 
+type=ADD_GROUP msg=audit(11/21/2022 10:29:54.544:3008) : pid=209213 uid=root auid=hello-splunk ses=144 subj=? msg='op=adding group acct=test-enrich-log exe=/usr/sbin/useradd hostname=hellosplunk-VirtualBox addr=? terminal=pts/1 res=success' 
+
+
+8. TA-auditd-linux does field extractions better with props. But it does not map to Endpoint datamodel (instead goes to auditd data model). 
+9. TA linux does mapping to datamodels but is not complete
+10. For Endpoint.Processes datamodel need tags {process, report}. Use extractions from auditd TA and datamodel mapping example from TA linux
+
